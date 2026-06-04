@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project — Alex Morgan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --bg: #12151e;
+        --bg-card: #1a1e2a;
+        --bg-nav: rgba(18, 21, 30, 0.88);
+        --text: #ffffff;
+        --text-muted: #7a8099;
+        --accent: #e86a00;
+        --accent-glow: rgba(232, 106, 0, 0.2);
+        --border: rgba(255, 255, 255, 0.07);
+      }
+      [data-theme="light"] {
+        --bg: #f5f5f0;
+        --bg-card: #ffffff;
+        --bg-nav: rgba(245, 245, 240, 0.88);
+        --text: #111111;
+        --text-muted: #666666;
+        --accent: #e86a00;
+        --accent-glow: rgba(232, 106, 0, 0.15);
+        --border: rgba(0, 0, 0, 0.09);
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: "Roboto Mono", monospace;
+        background: var(--bg);
+        color: var(--text);
+        cursor: none;
+        overflow-x: hidden;
+        transition: background 0.4s, color 0.4s;
+      }
+
+      #cursor-dot {
+        position: fixed;
+        width: 8px;
+        height: 8px;
+        background: var(--accent);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9999;
+        transform: translate(-50%, -50%);
+      }
+      #cursor-ring {
+        position: fixed;
+        width: 36px;
+        height: 36px;
+        border: 1.5px solid var(--accent);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9998;
+        transform: translate(-50%, -50%);
+        transition: width 0.25s, height 0.25s, opacity 0.25s;
+        opacity: 0.5;
+      }
+      .cursor-trail {
+        position: fixed;
+        width: 5px;
+        height: 5px;
+        background: var(--accent);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9997;
+        transform: translate(-50%, -50%);
+        opacity: 0;
+      }
+
+      #theme-toggle {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 500;
+        cursor: none;
+        width: 56px;
+        height: 28px;
+        background: none;
+        border: none;
+        padding: 0;
+      }
+      .toggle-track {
+        width: 56px;
+        height: 28px;
+        border-radius: 14px;
+        background: var(--bg-card);
+        border: 1.5px solid var(--accent);
+        position: relative;
+        transition: background 0.4s;
+        display: flex;
+        align-items: center;
+        padding: 3px;
+      }
+      .toggle-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--accent);
+        position: absolute;
+        left: 3px;
+        transition: transform 0.35s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+      }
+      .toggle-icon-dark {
+        position: absolute;
+        right: 6px;
+        font-size: 12px;
+        opacity: 0.6;
+        transition: opacity 0.3s;
+      }
+      .toggle-icon-light {
+        position: absolute;
+        left: 6px;
+        font-size: 12px;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      [data-theme="light"] .toggle-thumb {
+        transform: translateX(28px);
+      }
+      [data-theme="light"] .toggle-icon-dark {
+        opacity: 0;
+      }
+      [data-theme="light"] .toggle-icon-light {
+        opacity: 0.6;
+      }
+
+      #bg-canvas {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        opacity: 0.3;
+      }
+
+      /* ── Nav ── */
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.2rem 6vw;
+        background: var(--bg-nav);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid var(--border);
+        transition: background 0.4s, border-color 0.4s;
+      }
+      .logo {
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        color: var(--text);
+        text-decoration: none;
+      }
+      .logo span {
+        color: var(--accent);
+      }
+        .logo img {
+        max-width: 50px;
+      }
+      .nav-center {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.78rem;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        color: var(--text);
+        white-space: nowrap;
+      }
+      .nav-back {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.73rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+      .nav-back:hover {
+        color: var(--accent);
+      }
+      .nav-back svg {
+        transition: transform 0.2s;
+      }
+      .nav-back:hover svg {
+        transform: translateX(-3px);
+      }
+      #menu-btn {
+        display: none;
+        background: none;
+        border: none;
+        cursor: none;
+        font-size: 1.3rem;
+        color: var(--text);
+      }
+      #mobile-menu {
+        display: none;
+        flex-direction: column;
+        gap: 1.2rem;
+        padding: 1.5rem 6vw;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        position: relative;
+        z-index: 99;
+        transition: background 0.4s;
+      }
+      #mobile-menu a {
+        text-decoration: none;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      #mobile-menu.open {
+        display: flex;
+      }
+
+      /* ── Project Hero Header ── */
+      #project-header {
+        position: relative;
+        z-index: 1;
+        min-height: 70vh;
+        display: flex;
+        align-items: flex-end;
+        padding: 0 6vw 5rem;
+        overflow: hidden;
+      }
+      #project-header .bg-img {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center;
+        transition: transform 0.6s ease;
+      }
+      #project-header::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to top,
+          rgba(12, 15, 24, 0.92) 0%,
+          rgba(12, 15, 24, 0.4) 60%,
+          transparent 100%
+        );
+        z-index: 1;
+      }
+      .project-header-inner {
+        position: relative;
+        z-index: 2;
+        max-width: 700px;
+      }
+      .project-cat {
+        font-size: 0.7rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 1rem;
+      }
+      .project-title {
+        font-size: clamp(2.5rem, 7vw, 5rem);
+        font-weight: 600;
+        line-height: 1.05;
+        color: #fff;
+        margin-bottom: 1rem;
+      }
+      .project-year {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        letter-spacing: 0.15em;
+      }
+
+      /* ── Description ── */
+      #project-desc {
+        position: relative;
+        z-index: 1;
+        padding: 5rem 6vw;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      .desc-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+      }
+      .desc-main {
+        font-size: 0.87rem;
+        color: var(--text-muted);
+        line-height: 1.95;
+      }
+      .desc-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      .meta-item .meta-label {
+        font-size: 0.65rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 0.4rem;
+      }
+      .meta-item .meta-value {
+        font-size: 0.8rem;
+        color: var(--text);
+      }
+
+      /* ── Image Grid ── */
+      #project-gallery {
+        position: relative;
+        z-index: 1;
+        padding: 2rem 2vw 7rem;
+      }
+      .gallery-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .5rem;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      .gallery-item {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+        transition: transform 0.3s, border-color 0.4s, background 0.4s;
+        cursor: none;
+      }
+      .gallery-item:hover {
+        transform: translateY(-4px);
+        border-color: rgba(232, 106, 0, 0.3);
+      }
+      .gallery-item .placeholder {
+        aspect-ratio: 4/3;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        color: var(--text-muted);
+        font-size: 0.68rem;
+        letter-spacing: 0.1em;
+      }
+      .gallery-item .placeholder svg {
+        opacity: 0.3;
+      }
+      .gallery-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      section.reveal-section {
+        position: relative;
+        z-index: 1;
+      }
+      .reveal {
+        opacity: 0;
+        transform: translateY(22px);
+        transition: opacity 0.6s, transform 0.6s;
+      }
+      .reveal.visible {
+        opacity: 1;
+        transform: none;
+      }
+
+      footer {
+        position: relative;
+        z-index: 1;
+        padding: 2rem 6vw;
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      @media (max-width: 640px) {
+        .nav-center {
+          display: none;
+        }
+        #menu-btn {
+          display: block;
+        }
+        .desc-grid {
+          grid-template-columns: 1fr;
+          gap: 2rem;
+        }
+        .gallery-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"></div>
+    <canvas id="bg-canvas"></canvas>
+
+    <button id="theme-toggle" aria-label="Toggle theme">
+      <div class="toggle-track">
+        <span class="toggle-icon-light"></span>
+        <div class="toggle-thumb"></div>
+        <span class="toggle-icon-dark"></span>
+      </div>
+    </button>
+
+    <!-- Nav -->
+    <nav>
+      <a href="index.html" class="logo"><img src="Logo/png.png" alt="" /></a>
+      <span class="nav-center" id="nav-project-title">Ember Chair</span>
+      <a href="index.html#projects" class="nav-back">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path d="M19 12H5M12 5l-7 7 7 7" />
+        </svg>
+        Back
+      </a>
+      <button id="menu-btn">☰</button>
+    </nav>
+    <div id="mobile-menu">
+      <a href="index.html">Home</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#projects">Work</a>
+      <a href="index.html#contact">Contact</a>
+    </div>
+
+    <!-- Project Hero Header -->
+    <div id="project-header">
+      <div class="bg-img" id="project-bg-img"></div>
+      <div class="project-header-inner">
+        <p class="project-cat" id="project-cat">Furniture</p>
+        <h1 class="project-title" id="project-title">Ember Chair</h1>
+        <p class="project-year" id="project-year">2025</p>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div id="project-desc">
+      <div class="desc-grid">
+        <p class="desc-main reveal" id="project-description">
+          The Ember Chair explores the boundary between structural honesty and
+          warmth. Bent steel meets hand-finished ash wood in a form that invites
+          extended sitting without sacrificing its visual lightness.
+          Manufactured in a single small-batch run of 40 units, each chair is
+          individually numbered.
+        </p>
+        <div class="desc-meta reveal">
+          <div class="meta-item">
+            <div class="meta-label">Category</div>
+            <div class="meta-value" id="meta-cat">Furniture</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Year</div>
+            <div class="meta-value" id="meta-year">2025</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Materials</div>
+            <div class="meta-value" id="meta-materials">
+              Bent steel, Ash wood
+            </div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Status</div>
+            <div class="meta-value" id="meta-status">Production</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gallery -->
+    <div id="project-gallery">
+      <div class="gallery-grid" id="gallery-grid">
+        <!-- Populated by JS or statically below -->
+        <div class="gallery-item reveal">
+          <div class="placeholder">
+            <!-- <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="M21 15l-5-5L5 21" />
+            </svg> -->
+            <img src="My Project/chair-pre-back-studio.png" alt="">
+          </div>
+        </div>
+
+
+
+    <footer>
+      <span>© 2026 Arsalan Shams</span>
+      <a
+        href="index.html#projects"
+        style="
+          color: var(--accent);
+          text-decoration: none;
+          font-size: 0.72rem;
+          letter-spacing: 0.1em;
+        "
+        >← All Projects</a
+      >
+    </footer>
+
+    <script>
+      // ── Theme ──
+      const html = document.documentElement;
+      document.getElementById("theme-toggle").addEventListener("click", () => {
+        const next =
+          html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        html.setAttribute("data-theme", next);
+        localStorage.setItem("theme", next);
+      });
+      html.setAttribute("data-theme", localStorage.getItem("theme") || "dark");
+
+      // ── Load project data from URL params ──
+      const params = new URLSearchParams(location.search);
+      const projects = {
+        "studio-chair": {
+          title: "Axis-Grip Task Chair",
+          cat: "Industrial Design / Ergonomic Workspace Furniture",
+          year: "2023",
+          bg: "My Project/chair-main.jpg",
+          materials: "Bent steel, Plastic ABS",
+          status: "Concept Design",
+          desc: "A masterclass in industrial ergonomics, the Axis-Grip combines a rugged structural skeleton with refined contact points. Featuring a dual-panel breathable mesh backrest and a precision-engineered metallic frame, it is designed for both high-end durability and long-term comfort. The signature orange mechanical pivots serve as functional accents, making the chair’s adjustability intuitive while reinforcing a bold, modern brand identity that bridges the gap between raw engineering and sophisticated office furniture.",
+          images: [
+            "My Project/chair-pre-back-studio.jpg",
+            "My Project/chair-pre-studio.jpg",
+            "My Project/chair-pre-sun.jpg",
+
+          ],
+        },
+        "sport-watch": {
+          title: "Orbit-D | Kinetic Timepiece",
+          cat: "Wearable Technology",
+          year: "2024",
+          bg: "My Project/sport watch 3.jpg",
+          materials: "Sillicone, Ocean plastic",
+          status: "Concept Design",
+          desc: "Orbit-D is a conceptual sport watch that redefines time-telling through a minimalist, handless interface. The design utilizes a series of rotating concentric discs to indicate hours and minutes, creating a dynamic dial that changes throughout the day. Encased in a bead-blasted matte chassis, the timepiece prioritizes legibility and geometric purity. The high-grip, textured performance strap emphasizes its “sport-tech” DNA, making it a functional accessory for the modern minimalist who values mechanical innovation over traditional ornamentation.",
+          images: [
+            "My Project/Sport watch.jpg",
+            "My Project/sport watch 02.jpg",
+
+          ],
+        },
+        "new-balance": {
+          title: "NB - Kinetic Shard",
+          cat: "Footwear Design / Concept Streetwear",
+          year: "2024",
+          bg: "My Project/New balance Main.jpg",
+          materials: "Comfi foam, Fabric",
+          status: "Concept Design",
+          desc: "The Kinetic Shard is a conceptual reimagining of the classic New Balance silhouette, pushing the boundaries of footwear geometry. It features an aggressive, multi-faceted midsole design that combines high-rebound comfort with a bold, architectural aesthetic. The upper utilizes a mix of matte synthetic overlays and breathable textiles, tied together by a central structural “N” frame. Designed for the intersection of high-street fashion and futuristic utility, this concept explores the tension between soft ergonomic comfort and hard-edged industrial forms.",
+          images: ["My Project/New Balance 2.jpg",
+                   "My Project/New Balance 3.jpg",
+                   "My Project/New balance 4.jpg",
+                   "My Project/New balance 5.jpg"
+                  ],
+        },
+        "comfortable-chair": {
+          title: "Oryx Lounge",
+          cat: "Premium Furniture / Lounge & Living",
+          year: "2024",
+          bg: "My Project/Lunge Main.jpg",
+          materials: "Powder-coated steel",
+          status: "Concept Design",
+          desc: "iThe Oryx Lounge is a bold exploration of organic minimalism and ergonomic luxury. It features a seamless, fluid seat upholstered in premium terracotta leather, designed to cradle the body in a natural reclined posture. The sculptural, matte black base provides a striking architectural contrast, creating a visual tension between the soft, inviting curves of the lounge and the solid, grounded structure. This piece serves as a statement of high-end craftsmanship, blending the boundaries between functional furniture and modern art.",
+          images: [
+            "My Project/Lunge 2.jpg",
+              "My Project/Lunge 4.jpg",
+              ],
+        },
+        "bosch": {
+          title: "BOSCH - Precision Pulse | Digital Power Tool",
+          cat: "Power Tools & UX",
+          year: "2024",
+          bg: "My Project/bosch main.jpg",
+          materials: "Plastic ABS-coated steel",
+          status: "Concept Design",
+          desc: "The Bosch Precision Pulse is a reimagining of the ergonomic power tool, blending robust industrial performance with a high-fidelity digital interface. Designed for precision tasks, the tool features a dual-material overmold—combining high-impact matte polymer with a satin-finish metallic red core. The rear-integrated LED display provides real-time haptic feedback and mode selection (Burst, Auto, Manual), ensuring a seamless UX. The form factor is sculpted to minimize wrist strain, showcasing a “Professional Grade” aesthetic through tight tolerances and sophisticated CMF (Color, Material, Finish) execution.",
+          images: [
+            "My Project/bosch 02.jpg",
+              
+              ],
+        },
+        "adidas-shoes": {
+          title: "Adidas - Strata Core",
+          cat: "Footwear Design / Minimalist Sportswear",
+          year: "2023",
+          bg: "My Project/Adidas Main.jpg",
+          materials: "Carbon fibre, EPS",
+          status: "Concept Design",
+          desc: "The Strata Core is a conceptual exploration of structural minimalism, reimagining the heritage Adidas aesthetic through a modern industrial lens. The design is defined by three oversized elasticated bands that provide dynamic lockdown and a striking visual rhythm. Paired with a sculpted gum-rubber outsole and a sleek, matte black textile upper, this concept balances high-contrast materials with a streamlined silhouette. It’s a tribute to the “Less is More” philosophy, designed for a future where fashion and mechanical simplicity coexist.",
+          images: [
+            "My Project/Adidas 2.jpg",
+            "My Project/Adidas 3.jpg",
+            "My Project/Adidas 4.jpg",
+            "My Project/Adidas 5.jpg",
+            "My Project/Adidas 6.jpg",
+
+              ],
+        },
+        "oil-bottle": {
+          title: "Castrol GTX - Vector Flow",
+          cat: "Packaging Design / Industrial Consumer Goods",
+          year: "2023",
+          bg: "My Project/Oil bottle main.jpg",
+          materials: "Borosilicate, Walnut",
+          status: "Concept Design",
+          desc: "The Vector Flow is a bold reimagining of industrial fluid packaging, focusing on precision ergonomics and brand modernization. The design features a signature angular handle integrated directly into the bottle’s silhouette, providing a balanced grip for accurate pouring. A dual-material aesthetic combines the iconic Castrol green with high-traction orange textured grips, ensuring stability even in oily environments. This concept moves away from traditional blow-molded curves toward a more architectural, “engineered” form factor that emphasizes the premium nature of the GTX engine oil line.",
+          images: [
+            "My Project/Oil bottle 2.jpg",
+             "My Project/Oil bottle 3.jpg",
+              ],
+        },
+        "jewels-Collection": {
+          title: "Mechanical Opulence (CGI Study)",
+          cat: "3D Visualization / Motion Design for Web",
+          year: "2024",
+          bg: "My Project/Jewels Main.jpg",
+          materials: "Waxed canvas, Brass",
+          status: "Production",
+          desc: "A high-end CGI visualization and animation project designed for a luxury web experience. This study focuses on the intricate mechanical interaction of a Cartier-inspired jewelry clasp, utilizing cinematic lighting to accentuate the sharp, architectural facets of 18K gold. Through deliberate motion design and macro-lens simulation, the animation reveals the complex inner workings and pavé diamond details, creating a tactile sense of luxury that bridges the gap between digital rendering and physical craftsmanship.",
+          images: [
+            "My Project/Jewels 1.jpg"
+
+
+        ],
+        },
+        "speaker-box": {
+          title: "Sonic-Rig V4 | Acoustic Array Enclosure",
+          cat: "Pro Audio Hardware / Acoustic Engineering",
+          year: "2024",
+          bg: "My Project/Speaker Box Main.jpg",
+          materials: "MDF",
+          status: "Production",
+          desc: "The Sonic-Rig V4 is a high-performance acoustic enclosure designed for maximum sound pressure level (SPL) and structural integrity. Featuring an aggressive internal bracing system and a curved waveguide geometry, the design minimizes cabinet resonance and optimizes airflow for low-frequency projection. The modular “Array” configuration allows for scalable sound reinforcement, while the matte industrial finish emphasizes a professional, “tool-like” aesthetic. This project showcases a deep intersection between mechanical engineering (DFM), vibration control, and functional industrial design.",
+          images: [
+            "My Project/Speaker box 2.jpg",
+             "My Project/Speaker Box 3.jpg"
+          ]
+        },
+         "simple-chair": {
+          title: "Trifid | Flat-Pack Utility Stool",
+          cat: "Furniture Design / Sustainable Flat-Pack",
+          year: "2025",
+          bg: "My Project/Simple Chair Main.jpg",
+          materials: "Waxed canvas, Brass",
+          status: "Prototype",
+          desc: "Trifid is an exploration of structural efficiency and knockdown (KD) furniture design. The project focuses on a “low-part-count” philosophy, utilizing three identical CNC-cut plywood legs secured by a central steel mounting hub. This design minimizes manufacturing waste and allows for ultra-compact flat-pack distribution. The visible hardware and clean joinery celebrate the honest expression of its construction, making it a versatile piece for modern, minimalist interiors that value both form and logistical intelligence.",
+          images: [
+            "My Project/Simple Chair 02.jpg"
+            , "My Project/Simple Chair 03.jpg"
+            , "My Project/Simple Chair 04.jpg"
+          ],
+        },
+      };
+
+      const key = params.get('project');
+      const p = projects[key];  
+
+      document.title = p.title + " — Arsalan Shams";
+      document.getElementById("nav-project-title").textContent = p.title;
+      document.getElementById("project-cat").textContent = p.cat;
+      document.getElementById("project-title").textContent = p.title;
+      document.getElementById("project-year").textContent = p.year;
+      document.getElementById("project-description").textContent = p.desc;
+      document.getElementById("meta-cat").textContent = p.cat;
+      document.getElementById("meta-year").textContent = p.year;
+      document.getElementById("meta-materials").textContent = p.materials;
+      document.getElementById("meta-status").textContent = p.status;
+
+      // BG image
+      const bgEl = document.getElementById("project-bg-img");
+      bgEl.style.backgroundImage = `url('${p.bg}')`;
+
+      // Gallery
+      const grid = document.getElementById("gallery-grid");
+      grid.innerHTML = p.images
+        .map(
+          (src) => `
+  <div class="gallery-item reveal">
+    <div class="placeholder">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Add image
+    </div><img data-src="${src}" alt="" style="display:none">
+  </div>`
+        )
+        .join("");
+
+      // Lazy-load gallery images
+      document.querySelectorAll("img[data-src]").forEach((img) => {
+        const real = new Image();
+        real.onload = () => {
+          img.src = img.dataset.src;
+          img.style.display = "block";
+          img.previousElementSibling?.remove();
+        };
+        real.src = img.dataset.src;
+      });
+
+      // ── Cursor ──
+      const dot = document.getElementById("cursor-dot");
+      const ring = document.getElementById("cursor-ring");
+      const trails = Array.from({ length: 8 }, () => {
+        const t = document.createElement("div");
+        t.className = "cursor-trail";
+        document.body.appendChild(t);
+        return t;
+      });
+      let mx = 0,
+        my = 0,
+        ringX = 0,
+        ringY = 0,
+        trailPos = Array.from({ length: 8 }, () => ({ x: 0, y: 0 }));
+      document.addEventListener("mousemove", (e) => {
+        mx = e.clientX;
+        my = e.clientY;
+      });
+      (function animCursor() {
+        dot.style.left = mx + "px";
+        dot.style.top = my + "px";
+        ringX += (mx - ringX) * 0.12;
+        ringY += (my - ringY) * 0.12;
+        ring.style.left = ringX + "px";
+        ring.style.top = ringY + "px";
+        trailPos.unshift({ x: mx, y: my });
+        trailPos = trailPos.slice(0, 8);
+        trails.forEach((t, i) => {
+          const p = trailPos[i] || trailPos[0];
+          t.style.left = p.x + "px";
+          t.style.top = p.y + "px";
+          t.style.opacity = (1 - i / 8) * 0.3;
+        });
+        requestAnimationFrame(animCursor);
+      })();
+      document.querySelectorAll("a,button,.gallery-item").forEach((el) => {
+        el.addEventListener("mouseenter", () => {
+          ring.style.width = "58px";
+          ring.style.height = "58px";
+          ring.style.opacity = ".25";
+        });
+        el.addEventListener("mouseleave", () => {
+          ring.style.width = "36px";
+          ring.style.height = "36px";
+          ring.style.opacity = ".5";
+        });
+      });
+
+      // ── Particles ──
+      const canvas = document.getElementById("bg-canvas"),
+        ctx = canvas.getContext("2d");
+      let W, H, pts;
+      function resize() {
+        W = canvas.width = innerWidth;
+        H = canvas.height = innerHeight;
+      }
+      resize();
+      pts = Array.from({ length: 80 }, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.4 + 0.4,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+      }));
+      window.addEventListener("resize", () => {
+        resize();
+        pts = Array.from({ length: 80 }, () => ({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: Math.random() * 1.4 + 0.4,
+          vx: (Math.random() - 0.5) * 0.3,
+          vy: (Math.random() - 0.5) * 0.3,
+        }));
+      });
+      (function drawP() {
+        ctx.clearRect(0, 0, W, H);
+        const dark = html.getAttribute("data-theme") === "dark";
+        pts.forEach((p) => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = dark ? "rgba(232,106,0,0.5)" : "rgba(232,106,0,0.3)";
+          ctx.fill();
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x < 0 || p.x > W) p.vx *= -1;
+          if (p.y < 0 || p.y > H) p.vy *= -1;
+        });
+        requestAnimationFrame(drawP);
+      })();
+
+      // ── Reveal ──
+      const io = new IntersectionObserver(
+        (es) =>
+          es.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.classList.add("visible");
+              io.unobserve(e.target);
+            }
+          }),
+        { threshold: 0.15 }
+      );
+      document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+
+      // Mobile menu
+      document
+        .getElementById("menu-btn")
+        .addEventListener("click", () =>
+          document.getElementById("mobile-menu").classList.toggle("open")
+        );
+      document
+        .querySelectorAll("#mobile-menu a")
+        .forEach((a) =>
+          a.addEventListener("click", () =>
+            document.getElementById("mobile-menu").classList.remove("open")
+          )
+        );
+    </script>
+  </body>
+</html>
